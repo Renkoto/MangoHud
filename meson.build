@@ -51,6 +51,13 @@ if ['linux', 'cygwin', 'gnu'].contains(host_machine.system())
   is_unixy = true
 endif
 
+# Platforms without glibc extensions, backends exist for these in src/
+is_freebsd = host_machine.system() == 'freebsd'
+if is_freebsd
+  pre_args += '-DHAVE_PTHREAD'
+  is_unixy = true
+endif
+
 if host_machine.system() == 'linux'
   pre_args += '-DHAVE_FTRACE'
 endif
@@ -368,6 +375,11 @@ if get_option('mangoplot').enabled()
   subdir('bin')
 endif
 
+# mangohud-next needs sd-bus (systemd/elogind), Wayland and Linux-only IPC
 if get_option('with_mangohud_next')
-  subdir('mangohud-next')
+  if host_machine.system() == 'linux'
+    subdir('mangohud-next')
+  else
+    message('mangohud-next is only supported on Linux, not building it')
+  endif
 endif
