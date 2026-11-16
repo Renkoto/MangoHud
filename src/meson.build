@@ -68,7 +68,7 @@ if is_freebsd
     'amdgpu_freebsd.cpp',
   )
   # sysfs doesn't exist, AMD GPUs are queried through libdrm_amdgpu
-  platform_deps += dependency('libdrm_amdgpu')
+  platform_deps += [libdrm_dep, dependency('libdrm_amdgpu')]
   # kvm_getswapinfo()
   platform_deps += cc.find_library('kvm')
 else
