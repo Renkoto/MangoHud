@@ -61,22 +61,33 @@ vklayer_files = files(
   'amdgpu.cpp',
 )
 
-# Platform backends, the common part of each lives in the files above/below
+# Platform backends: the common part of each module is in the files above and
+# below, the part that talks to the OS is <module>_<os>.cpp. Linux (also used
+# on cygwin and gnu) keeps the original names. Porting to another Unix means
+# adding those files, the BSDs share notify_kqueue.cpp and net_getifaddrs.cpp.
+fs = import('fs')
+backend_modules = ['gpu', 'amdgpu', 'file_utils', 'cpu', 'memory', 'iostats', 'battery', 'system_info']
 platform_deps = []
-if is_freebsd
-  vklayer_files += files(
-    'gpu_freebsd.cpp',
-    'amdgpu_freebsd.cpp',
-  )
-  # sysfs doesn't exist, AMD GPUs are queried through libdrm_amdgpu
-  platform_deps += [libdrm_dep, dependency('libdrm_amdgpu')]
-  # kvm_getswapinfo()
-  platform_deps += cc.find_library('kvm')
+if is_unixy and not ['linux', 'cygwin', 'gnu'].contains(host_machine.system())
+  foreach m : backend_modules
+    f = '@0@_@1@.cpp'.format(m, host_machine.system())
+    if not fs.exists(f)
+      error('No @0@ backend for @1@: src/@2@ is missing'.format(m, host_machine.system(), f))
+    endif
+    vklayer_files += files(f)
+  endforeach
+  vklayer_files += files('notify_kqueue.cpp', 'net_getifaddrs.cpp')
 else
   vklayer_files += files(
     'gpu_linux.cpp',
     'amdgpu_linux.cpp',
   )
+endif
+if is_freebsd
+  # sysfs doesn't exist, AMD GPUs are queried through libdrm_amdgpu
+  platform_deps += [libdrm_dep, dependency('libdrm_amdgpu')]
+  # kvm_getswapinfo()
+  platform_deps += cc.find_library('kvm')
 endif
 
 opengl_files  = []
@@ -110,18 +121,7 @@ if is_unixy
     'ftrace.cpp',
   )
 
-  if is_freebsd
-    vklayer_files += files(
-      'file_utils_freebsd.cpp',
-      'cpu_freebsd.cpp',
-      'memory_freebsd.cpp',
-      'iostats_freebsd.cpp',
-      'notify_freebsd.cpp',
-      'battery_freebsd.cpp',
-      'net_freebsd.cpp',
-      'system_info_freebsd.cpp',
-    )
-  else
+  if ['linux', 'cygwin', 'gnu'].contains(host_machine.system())
     vklayer_files += files(
       'file_utils_linux.cpp',
       'cpu.cpp',

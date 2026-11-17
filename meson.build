@@ -51,11 +51,15 @@ if ['linux', 'cygwin', 'gnu'].contains(host_machine.system())
   is_unixy = true
 endif
 
-# Platforms without glibc extensions, backends exist for these in src/
+# Other Unix systems have their own backends in src/, see src/meson.build
 is_freebsd = host_machine.system() == 'freebsd'
-if is_freebsd
+if ['freebsd', 'netbsd', 'openbsd', 'dragonfly'].contains(host_machine.system())
   pre_args += '-DHAVE_PTHREAD'
   is_unixy = true
+endif
+
+if not is_unixy and not ['windows', 'mingw'].contains(host_machine.system())
+  error('MangoHud does not support @0@ yet'.format(host_machine.system()))
 endif
 
 if host_machine.system() == 'linux'
