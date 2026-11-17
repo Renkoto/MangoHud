@@ -92,17 +92,28 @@ bool AMDGPU::get_instant_metrics(struct amdgpu_common_metrics *metrics) {
 		return false;
 
 	uint32_t v;
-	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GPU_LOAD, v))
+	bool any = false;
+	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GPU_LOAD, v)) {
 		metrics->gpu_load_percent = v;
-	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GPU_AVG_POWER, v))
+		any = true;
+	}
+	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GPU_AVG_POWER, v)) { // watts
 		metrics->average_gfx_power_w = v;
-	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GFX_SCLK, v))
+		any = true;
+	}
+	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GFX_SCLK, v)) {
 		metrics->current_gfxclk_mhz = v;
-	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GFX_MCLK, v))
+		any = true;
+	}
+	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GFX_MCLK, v)) {
 		metrics->current_uclk_mhz = v;
-	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GPU_TEMP, v))
+		any = true;
+	}
+	if (query_sensor(h->dev, AMDGPU_INFO_SENSOR_GPU_TEMP, v)) {
 		metrics->gpu_temp_c = v / 1000; // millidegrees Celsius
-	return true;
+		any = true;
+	}
+	return any;
 }
 
 void AMDGPU::get_sysfs_metrics() {
