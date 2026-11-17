@@ -102,7 +102,9 @@ float BatteryStats::getPower()
         io.unit = unit;
         if (ioctl(fd, ACPIIO_BATT_GET_BST, &io) == -1)
             continue;
-        if (io.bst.state == ACPI_BATT_STAT_NOT_PRESENT || io.bst.rate == ACPI_BATT_UNKNOWN)
+        // a charging unit reports its charge rate, only the draw counts
+        if (io.bst.state == ACPI_BATT_STAT_NOT_PRESENT || !(io.bst.state & ACPI_BATT_STAT_DISCHARG)
+            || io.bst.rate == ACPI_BATT_UNKNOWN)
             continue;
 
         if (power_units == ACPI_BIX_UNITS_MA) {
