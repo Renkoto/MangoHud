@@ -1,6 +1,7 @@
 glslang = find_program('glslang', 'glslangValidator')
 
-if get_option('dynamic_string_tokens')
+# Only glibc and musl expand $LIB; other rtlds (FreeBSD, ...) take it literally
+if get_option('dynamic_string_tokens') and host_machine.system() == 'linux'
   ld_prefix = get_option('prefix') + '/\$LIB/'
 else
   ld_prefix = join_paths(get_option('prefix') ,get_option('libdir')) + '/'
